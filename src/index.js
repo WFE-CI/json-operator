@@ -2,12 +2,13 @@
  * @Author: Erwin
  * @Date:   2018-08-27 21-08-84
  * @Last modified by:   erwin
- * @Last modified time: 2018-08-28 22-08-84
+ * @Last modified time: 2018-08-28 22-08-37
  */
 // todoList
 // TODO: 1、增加导出出口
 // TODO: 2、增加JSON文件单独的读取和写入接口，并考虑尽量减少fs.open次数
-// TODO: 3.增加单元测试
+// TODO: 3、增加JSON文件内容清空流程的事物回滚
+// TODO: 4、增加单元测试
 
 
 const fs = require('fs');
