@@ -1,0 +1,22 @@
+{
+  "name": "json-operator",
+  "version": "0.1.0",
+  "description": "change and modify jsonFile.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "no"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WFE-CI/json-operator.git"
+  },
+  "keywords": [
+    "json"
+  ],
+  "author": "golddream-y",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/WFE-CI/json-operator/issues"
+  },
+  "homepage": "https://github.com/WFE-CI/json-operator#readme"
+}
