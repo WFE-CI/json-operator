@@ -1,8 +1,8 @@
 /**
  * @Author: erwin
  * @Date:   2018-08-30 20-08-98
- * @Last modified by:   erwin
- * @Last modified time: 2018-08-30 20-08-51
+ * @Last modified by:   Erwin
+ * @Last modified time: 2018-08-30 20-08-49
  */
 
 const jsonOperator = require('./index.js');
