@@ -15,10 +15,12 @@ change and modify jsonFile.
 
 ### use
 
-`const jsonOperator = require('json-operator');`
+<pre name="code" class="javascript">
+const jsonOperator = require('json-operator');
 
-`jsonOperator('../package.json', ['version'], '0.2.0').then(function(info) {
-  console.log(info);
-}, function(err) {
-  console.log(err);
-})`
+jsonOperator('../package.json', ['version'], '0.2.0').then(function(info) {  
+  console.log(info);  
+}, function(err) {  
+  console.log(err);  
+})
+</pre>
