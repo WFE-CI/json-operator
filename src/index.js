@@ -2,47 +2,60 @@
  * @Author: Erwin
  * @Date:   2018-08-27 21-08-84
  * @Last modified by:   erwin
- * @Last modified time: 2018-08-28 22-08-37
+ * @Last modified time: 2018-08-30 20-08-82
  */
-// todoList
-// TODO: 1、增加导出出口
-// TODO: 2、增加JSON文件单独的读取和写入接口，并考虑尽量减少fs.open次数
-// TODO: 3、增加JSON文件内容清空流程的事物回滚
-// TODO: 4、增加单元测试
-
+'use strict'
 
 const fs = require('fs');
 
-/**
- * 获取字符串的UTF-8编码字节长度
- * @method lengthUTF8
- * @param  {[type]}   inputStr
- * @return {[type]}
- */
-function lengthUTF8(inputStr) {
-  if (inputStr.length < 17) {
-    return true;
-  }
-  var i = 0;
-  var totalLength = 0;
-  /* 计算utf-8编码情况下的字符串长度 */
-  for (i = 0; i < inputStr.length; i++) {
-    if (inputStr.charCodeAt(i) <= parseInt("0x7F")) {
-      totalLength += 1;
-    } else if (inputStr.charCodeAt(i) <= parseInt("0x7FF")) {
-      totalLength += 2;
-    } else if (inputStr.charCodeAt(i) <= parseInt("0xFFFF")) {
-      totalLength += 3;
-    } else if (inputStr.charCodeAt(i) <= parseInt("0x1FFFFF")) {
-      totalLength += 4;
-    } else if (inputStr.charCodeAt(i) <= parseInt("0x3FFFFFF")) {
-      totalLength += 5;
-    } else {
-      totalLength += 6;
+
+const util = {
+  /**
+   * 获取字符串的UTF-8编码字节长度
+   * @method lengthUTF8
+   * @param  {[type]}   inputStr
+   * @return {[type]}
+   */
+  lengthUTF8: inputStr => {
+    if (inputStr.length < 17) {
+      return true;
     }
+    var i = 0;
+    var totalLength = 0;
+    /* 计算utf-8编码情况下的字符串长度 */
+    for (i = 0; i < inputStr.length; i++) {
+      if (inputStr.charCodeAt(i) <= parseInt("0x7F")) {
+        totalLength += 1;
+      } else if (inputStr.charCodeAt(i) <= parseInt("0x7FF")) {
+        totalLength += 2;
+      } else if (inputStr.charCodeAt(i) <= parseInt("0xFFFF")) {
+        totalLength += 3;
+      } else if (inputStr.charCodeAt(i) <= parseInt("0x1FFFFF")) {
+        totalLength += 4;
+      } else if (inputStr.charCodeAt(i) <= parseInt("0x3FFFFFF")) {
+        totalLength += 5;
+      } else {
+        totalLength += 6;
+      }
+    }
+    return totalLength;
+  },
+  changeVal: ({
+    target,
+    cVal,
+    data
+  }) => {
+    let evalStr = 'data';
+    for (let loc of target) {
+      evalStr += '.' + loc;
+    }
+    eval(evalStr + '=cVal');
+    return data;
   }
-  return totalLength;
-}
+};
+
+
+
 
 /**
  * 写入JSON文件内容
@@ -56,7 +69,7 @@ const writeFileContent = (fd, content, callBack) => {
   // console.log('将要写入的内容：', content.length, lengthUTF8(content));;
   var buffer = new Buffer(content);
   //写入JSON文件内容
-  fs.write(fd, buffer, 0, lengthUTF8(content), 0, (err, written, bufferStream) => {
+  fs.write(fd, buffer, 0, util.lengthUTF8(content), 0, (err, written, bufferStream) => {
     if (err) {
       console.log('写入文件失败');
       console.error(err);
@@ -76,51 +89,88 @@ const writeFileContent = (fd, content, callBack) => {
  * @param  {[type]}        fd
  * @param  {[type]}        buffer
  * @param  {[type]}        size
+ * @param  {[type]}        changeInfo
  * @param  {[type]}        callBack
  * @return {[type]}
  */
-const readFileContent = (fd, buffer, size, callBack) => {
+const readFileContent = (fd, buffer, size, changeInfo, callBack) => {
   fs.read(fd, buffer, 0, size, 0, (err, bytesRead, contentBuffer) => {
     if (err) {
       throw err;
     } else {
       let jsonData = JSON.parse(contentBuffer.slice(0, bytesRead).toString());
-
-      jsonData.version = '1.24.0-test';
+      // 改变指定位置JSON数据
+      jsonData = util.changeVal({ ...changeInfo,
+        data: jsonData
+      });
       callBack(fd, jsonData);
     }
   });
 };
 
 
+
+
 /**
- * 开始文件操作
- * @type {String}
+ * main
+ * @method
+ * @param  {[type]} fileLoc 目标文件位置
+ * @param  {[type]} target  目标属性位置，['zhangsan','name'] -> jsonFile.zhangsan.name
+ * @param  {[type]} cVal    目标属性将要改的值
+ * @return {[type]}
  */
-fs.open('package.json', 'r+', (err, fd) => {
-  if (err) throw err;
-  fs.fstat(fd, (err, stat) => {
-    if (err) throw err;
-    console.log('stat:', stat.size);
-    // 初始化buffer对象的内存空间
-    let buffer = new Buffer(stat.size);
+module.exports = function(fileLoc, target, cVal) {
+  return new Promise(
+    function(resolve, reject) {
 
-    // 读取JSON文件内容
-    readFileContent(fd, buffer, stat.size, function(readFd, jsonData) {
 
-      // 清空JSON文件内容
-      fs.ftruncate(fd, 0, (err) => {
+      /**
+       * 开始文件操作
+       * @type {String}
+       */
+      fs.open(fileLoc, 'r+', (err, fd) => {
         if (err) throw err;
-      });
+        fs.fstat(fd, (err, stat) => {
+          if (err) {
+            reject(err);
+            throw err;
+          };
+          console.log('stat:', stat.size);
+          // 初始化buffer对象的内存空间
+          let buffer = new Buffer(stat.size);
 
-      // 写入JSON文件内容
-      writeFileContent(readFd, JSON.stringify(jsonData, null, '\t'), () => {
-        // 关闭文件描述符
-        fs.close(fd, (err) => {
-          if (err) throw err;
+          const readParam = [fd, buffer, stat.size, {
+            'target': target,
+            'cVal': cVal
+          }];
+          // 读取JSON文件内容
+          readFileContent(...readParam, function(readFd, jsonData) {
+
+            // 清空JSON文件内容
+            fs.ftruncate(fd, 0, (err) => {
+              if (err) {
+                reject(err);
+                throw err;
+              };
+            });
+
+            // 写入JSON文件内容
+            writeFileContent(readFd, JSON.stringify(jsonData, null, '\t'), () => {
+              // 关闭文件描述符
+              fs.close(fd, (err) => {
+                if (err) {
+                  reject(err);
+                  throw err;
+                };
+                resolve('success');
+              });
+            });
+          })
+
         });
       });
-    })
 
-  });
-});
+
+    }
+  );
+}
