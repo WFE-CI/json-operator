@@ -1,4 +1,4 @@
-# json-operator
+# json-file-operator
 change and modify jsonFile.
 
 
@@ -16,9 +16,9 @@ change and modify jsonFile.
 ### use
 
 <pre name="code" class="javascript">
-const jsonOperator = require('json-operator');
+const jsonFileperator = require('json-operator');
 
-jsonOperator('../package.json', ['version'], '0.2.0').then(function(info) {  
+jsonFileperator('../package.json', ['version'], '0.2.0').then(function(info) {  
   console.log(info);  
 }, function(err) {  
   console.log(err);  
